@@ -31,11 +31,19 @@ export default function JobsBoard({
   sources,
   enabledSources,
   roles,
+  heading = "Jobs",
+  subtitle,
+  discoverBody,
+  banner,
 }: {
   initialJobs: JobLite[];
   sources: SourceLite[];
   enabledSources: string[];
   roles: string[];
+  heading?: string;
+  subtitle?: string;
+  discoverBody?: Record<string, unknown>; // extra fields merged into the discover request
+  banner?: string; // optional info banner shown above the sources card
 }) {
   const router = useRouter();
   const [jobs] = useState(initialJobs);
@@ -68,15 +76,16 @@ export default function JobsBoard({
       const res = await fetch("/api/jobs/discover", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sources: selectedSources }),
+        body: JSON.stringify({ sources: selectedSources, ...(discoverBody || {}) }),
       });
       const data = await res.json();
       if (!res.ok) {
         setMessage(data.error || "Discovery failed.");
       } else {
         const errs = (data.errors || []).map((e: { source: string; message: string }) => `${e.source}: ${e.message}`);
+        const taggedNote = data.tagged ? `, tagged ${data.tagged} existing` : "";
         setMessage(
-          `Found ${data.found}, added ${data.added} new, scored ${data.scored}.` +
+          `Found ${data.found}, added ${data.added} new${taggedNote}, scored ${data.scored}.` +
             (errs.length ? ` Issues — ${errs.join("; ")}` : "")
         );
         router.refresh();
@@ -96,9 +105,9 @@ export default function JobsBoard({
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Jobs</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{heading}</h1>
           <p className="mt-1 text-sm text-slate-400">
-            Targeting {roles.join(", ") || "— set roles in Profiles"}
+            {subtitle ?? `Targeting ${roles.join(", ") || "— set roles in Profiles"}`}
           </p>
         </div>
         <div className="flex gap-2">
@@ -111,6 +120,12 @@ export default function JobsBoard({
           </button>
         </div>
       </div>
+
+      {banner && (
+        <div className="card border-brand-500/30 bg-brand-500/[0.06] px-4 py-3 text-sm text-brand-100">
+          {banner}
+        </div>
+      )}
 
       {/* sources */}
       <div className="card p-4">
@@ -197,12 +212,26 @@ export default function JobsBoard({
         </div>
       )}
 
-      {showManual && <ManualJobModal onClose={() => setShowManual(false)} onAdded={() => { setShowManual(false); router.refresh(); }} />}
+      {showManual && (
+        <ManualJobModal
+          extra={discoverBody}
+          onClose={() => setShowManual(false)}
+          onAdded={() => { setShowManual(false); router.refresh(); }}
+        />
+      )}
     </div>
   );
 }
 
-function ManualJobModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
+function ManualJobModal({
+  onClose,
+  onAdded,
+  extra,
+}: {
+  onClose: () => void;
+  onAdded: () => void;
+  extra?: Record<string, unknown>;
+}) {
   const [form, setForm] = useState({ title: "", company: "", location: "", url: "", descriptionText: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -213,7 +242,7 @@ function ManualJobModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
     const res = await fetch("/api/jobs/manual", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, ...(extra || {}) }),
     });
     const data = await res.json();
     setSaving(false);

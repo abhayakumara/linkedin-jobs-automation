@@ -13,6 +13,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Title and job description are required." }, { status: 400 });
   }
 
+  const indiaRemote = Boolean(body.indiaRemote);
   const job = await prisma.job.create({
     data: {
       profileId: profile.raw.id,
@@ -22,7 +23,8 @@ export async function POST(req: Request) {
       location: (body.location || "").trim(),
       url: (body.url || "").trim(),
       descriptionText: body.descriptionText,
-      remote: /remote/i.test(body.location || ""),
+      remote: indiaRemote || /remote/i.test(body.location || ""),
+      indiaRemote,
       status: "shortlisted",
     },
   });

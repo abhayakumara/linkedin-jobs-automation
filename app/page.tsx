@@ -4,7 +4,7 @@ import { getActiveProfile } from "@/lib/profile";
 import { capabilities } from "@/lib/settings";
 import { PageHeader, EmptyState, StatusBadge } from "@/components/ui";
 import { PipelineChart } from "@/components/PipelineChart";
-import { Briefcase, Send, Mail, Sparkles, ArrowRight, Rocket } from "lucide-react";
+import { Briefcase, Send, Mail, Sparkles, ArrowRight, Rocket, Globe } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +30,7 @@ export default async function DashboardPage() {
   }
 
   const pid = profile.raw.id;
-  const [total, applied, interview, offers, outreachSent, recent, byStatus] = await Promise.all([
+  const [total, applied, interview, offers, outreachSent, recent, byStatus, indiaCount] = await Promise.all([
     prisma.job.count({ where: { profileId: pid } }),
     prisma.job.count({ where: { profileId: pid, status: "applied" } }),
     prisma.job.count({ where: { profileId: pid, status: "interview" } }),
@@ -42,6 +42,7 @@ export default async function DashboardPage() {
       take: 5,
     }),
     prisma.job.groupBy({ by: ["status"], where: { profileId: pid }, _count: true }),
+    prisma.job.count({ where: { profileId: pid, indiaRemote: true } }),
   ]);
 
   const statusCounts: Record<string, number> = {};
@@ -66,6 +67,20 @@ export default async function DashboardPage() {
           letters, and high-quality match scoring. (A keyword heuristic is used meanwhile.)
         </div>
       )}
+
+      <Link
+        href="/remote-india"
+        className="card card-hover flex items-center justify-between px-4 py-3 text-sm"
+      >
+        <span className="flex items-center gap-2 text-slate-200">
+          <Globe className="h-4 w-4 text-brand-400" />
+          🇮🇳 Remote jobs workable from India
+        </span>
+        <span className="flex items-center gap-2 text-slate-400">
+          <span className="font-semibold text-brand-300">{indiaCount}</span> tracked
+          <ArrowRight className="h-4 w-4" />
+        </span>
+      </Link>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Stat label="Jobs tracked" value={total} icon={Briefcase} href="/jobs" />

@@ -20,7 +20,7 @@ export async function searchAdzuna(criteria: JobSearchCriteria): Promise<Normali
   if (!appId || !appKey) {
     throw new Error("Adzuna is enabled but ADZUNA_APP_ID / ADZUNA_APP_KEY are missing in .env");
   }
-  const country = (process.env.ADZUNA_COUNTRY || "us").toLowerCase();
+  const country = (criteria.country || process.env.ADZUNA_COUNTRY || "us").toLowerCase();
   const limit = criteria.limitPerSource ?? 20;
   const what = criteria.roles.join(" ") || "software";
   const where = criteria.locations[0] || "";

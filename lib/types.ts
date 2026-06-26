@@ -50,6 +50,7 @@ export interface JobSearchCriteria {
   locations: string[];
   remote: boolean;
   limitPerSource?: number;
+  country?: string; // override for sources that are country-scoped (e.g. Adzuna "in")
 }
 
 export const JOB_STATUSES = [

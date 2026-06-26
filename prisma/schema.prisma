@@ -50,6 +50,7 @@ model Job {
   descriptionText String  @default("")
   salary         String   @default("")
   remote         Boolean  @default(false)
+  indiaRemote    Boolean  @default(false) // remote & workable from India (own discovery section)
   postedAt       DateTime?
   fetchedAt      DateTime @default(now())
 
@@ -63,6 +64,7 @@ model Job {
   outreach       Outreach[]
 
   @@index([profileId, status])
+  @@index([profileId, indiaRemote])
 }
 
 model Application {

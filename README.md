@@ -19,6 +19,11 @@ on interviews, not copy-pasting.
   one at a time.
 - **Automatic job discovery** — pulls real jobs from public job APIs and de-dupes
   them. Paste any job (incl. LinkedIn) manually too.
+- **🇮🇳 Remote (India) section** — a dedicated view that discovers remote roles
+  realistically open to India-based candidates (Worldwide / Asia / India /
+  unrestricted listings, plus Adzuna searched against India). It carries the
+  **full toolkit** — match scoring, resume tailoring, cover letters, apply, and
+  recruiter outreach — just scoped to India-friendly remote jobs.
 - **AI match scoring + gap analysis** — every job gets a 0–100 fit score with
   strengths, gaps, and missing keywords (Claude when configured; a keyword
   heuristic otherwise).

@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   UserRound,
   Briefcase,
+  Globe,
   KanbanSquare,
   Mail,
   Settings,
@@ -25,6 +26,7 @@ interface ProfileLite {
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/jobs", label: "Jobs", icon: Briefcase },
+  { href: "/remote-india", label: "Remote (India)", icon: Globe },
   { href: "/applications", label: "Pipeline", icon: KanbanSquare },
   { href: "/outreach", label: "Outreach", icon: Mail },
   { href: "/profiles", label: "Profiles", icon: UserRound },

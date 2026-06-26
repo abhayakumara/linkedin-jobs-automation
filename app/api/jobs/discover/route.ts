@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getActiveProfile } from "@/lib/profile";
 import { getSettings } from "@/lib/settings";
 import { discoverJobs } from "@/lib/jobSources";
+import { isIndiaRemoteEligible } from "@/lib/jobSources/india";
 import { getMatch } from "@/lib/ai/match";
 import { JobSearchCriteria } from "@/lib/types";
 
@@ -14,20 +15,30 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => ({}));
   const settings = await getSettings();
+  const indiaRemote: boolean = Boolean(body.indiaRemote);
   const sources: string[] = body.sources?.length ? body.sources : settings.enabledSources;
 
   const criteria: JobSearchCriteria = {
-    roles: profile.targetRoles,
+    // For India-remote mode, bias the query toward remote roles.
+    roles: indiaRemote ? profile.targetRoles.map((r) => `${r} remote`) : profile.targetRoles,
     companies: profile.targetCompanies,
     locations: profile.preferences.locations,
     remote: profile.preferences.remote,
     limitPerSource: body.limitPerSource ?? 15,
+    // Adzuna is country-scoped: search India listings when in India-remote mode.
+    ...(indiaRemote ? { country: "in" } : {}),
   };
 
-  const { jobs, errors } = await discoverJobs(sources, criteria);
+  const discovery = await discoverJobs(sources, criteria);
+  let jobs = discovery.jobs;
+  const errors = discovery.errors;
+
+  // In India-remote mode, keep only jobs realistically workable from India.
+  if (indiaRemote) jobs = jobs.filter(isIndiaRemoteEligible);
 
   // Persist new jobs (skip ones we already have for this profile by url/externalId).
   let added = 0;
+  let tagged = 0;
   const createdJobs: { id: string; title: string; company: string; descriptionText: string }[] = [];
   for (const j of jobs) {
     const exists = await prisma.job.findFirst({
@@ -38,9 +49,16 @@ export async function POST(req: Request) {
           j.externalId ? { source: j.source, externalId: j.externalId } : { id: "__none__" },
         ],
       },
-      select: { id: true },
+      select: { id: true, indiaRemote: true },
     });
-    if (exists) continue;
+    if (exists) {
+      // If a known job qualifies for the India section, tag it so it shows there.
+      if (indiaRemote && !exists.indiaRemote) {
+        await prisma.job.update({ where: { id: exists.id }, data: { indiaRemote: true } });
+        tagged++;
+      }
+      continue;
+    }
     const created = await prisma.job.create({
       data: {
         profileId: profile.raw.id,
@@ -52,7 +70,8 @@ export async function POST(req: Request) {
         url: j.url,
         descriptionText: j.descriptionText,
         salary: j.salary,
-        remote: j.remote,
+        remote: indiaRemote ? true : j.remote,
+        indiaRemote,
         postedAt: j.postedAt,
       },
       select: { id: true, title: true, company: true, descriptionText: true },
@@ -76,5 +95,5 @@ export async function POST(req: Request) {
     }
   }
 
-  return NextResponse.json({ found: jobs.length, added, scored, errors });
+  return NextResponse.json({ found: jobs.length, added, scored, tagged, indiaRemote, errors });
 }
