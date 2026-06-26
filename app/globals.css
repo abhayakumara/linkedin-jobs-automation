@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 100% -10%, rgba(51, 102, 255, 0.18), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(124, 58, 237, 0.14), transparent 55%),
+    #0b1020;
+  min-height: 100vh;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm shadow-lg shadow-black/20;
+  }
+  .card-hover {
+    @apply transition hover:border-brand-500/50 hover:bg-white/[0.07];
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-500/60 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-brand-500 text-white hover:bg-brand-600 shadow-md shadow-brand-900/40;
+  }
+  .btn-ghost {
+    @apply btn bg-white/5 text-slate-200 hover:bg-white/10 border border-white/10;
+  }
+  .btn-danger {
+    @apply btn bg-rose-500/90 text-white hover:bg-rose-500;
+  }
+  .input {
+    @apply w-full rounded-xl border border-white/10 bg-ink-900/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand-500/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30;
+  }
+  .label {
+    @apply mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300;
+  }
+}
+
+/* Thin custom scrollbars */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+.prose-resume h1 { @apply text-xl font-bold text-white mt-0; }
+.prose-resume h2 { @apply text-sm font-semibold uppercase tracking-wide text-brand-300 mt-4 mb-1 border-b border-white/10 pb-1; }
+.prose-resume h3 { @apply text-sm font-semibold text-slate-100 mt-2; }
+.prose-resume p { @apply text-sm text-slate-300 my-1; }
+.prose-resume ul { @apply list-disc pl-5 my-1 text-sm text-slate-300; }
+.prose-resume a { @apply text-brand-300; }
+.prose-resume strong { @apply text-white; }

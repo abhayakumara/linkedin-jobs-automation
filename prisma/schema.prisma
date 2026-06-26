@@ -1,0 +1,116 @@
+// JobPilot data model — local SQLite, single-user (multiple switchable profiles).
+// SQLite has no native enums/arrays, so list/object fields are stored as JSON strings
+// and (de)serialized in lib/db helpers.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// A "persona" the app acts on behalf of. Switching the active profile is how
+// multiple people use the single-user app one at a time.
+model Profile {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @default("")
+  phone         String   @default("")
+  location      String   @default("")
+  linkedinUrl   String   @default("")
+  portfolioUrl  String   @default("")
+  headline      String   @default("")
+
+  targetRoles     String @default("[]") // JSON string[] e.g. ["Frontend Engineer"]
+  targetCompanies String @default("[]") // JSON string[] (optional)
+  preferences     String @default("{}") // JSON: { remote, locations[], minSalary, seniority, mustHave[], avoid[] }
+
+  baseResume    String   @default("") // markdown / plain text reference resume
+  isActive      Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  jobs          Job[]
+}
+
+model Job {
+  id             String   @id @default(cuid())
+  profileId      String
+  profile        Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  source         String   // remotive | arbeitnow | adzuna | manual | linkedin
+  externalId     String   @default("")
+  title          String
+  company        String
+  location       String   @default("")
+  url            String   @default("")
+  descriptionText String  @default("")
+  salary         String   @default("")
+  remote         Boolean  @default(false)
+  postedAt       DateTime?
+  fetchedAt      DateTime @default(now())
+
+  matchScore     Int?     // 0-100
+  matchAnalysis  String   @default("") // JSON: { rationale, strengths[], gaps[], missingKeywords[] }
+
+  // discovered | shortlisted | tailored | applied | interview | offer | rejected | skipped
+  status         String   @default("discovered")
+
+  application    Application?
+  outreach       Outreach[]
+
+  @@index([profileId, status])
+}
+
+model Application {
+  id              String   @id @default(cuid())
+  jobId           String   @unique
+  job             Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  tailoredResumeMd String  @default("")
+  resumePdfPath    String  @default("")
+  coverLetter      String  @default("")
+  atsKeywords      String  @default("{}") // JSON: { present[], missing[] }
+
+  method           String  @default("assisted") // assisted | linkedin-auto
+  status           String  @default("draft")    // draft | ready | submitted
+  appliedAt        DateTime?
+  notes            String  @default("")
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Outreach {
+  id             String   @id @default(cuid())
+  jobId          String?
+  job            Job?     @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  company        String   @default("")
+  recruiterName  String   @default("")
+  recruiterEmail String   @default("")
+  subject        String   @default("")
+  body           String   @default("")
+
+  status         String   @default("draft") // draft | approved | sent | failed
+  sentAt         DateTime?
+  error          String   @default("")
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// Single-row settings (id is always "singleton"). Secrets live in .env, not here.
+model Settings {
+  id               String  @id @default("singleton")
+  emailMode        String  @default("review")  // review | auto
+  automationEnabled Boolean @default(false)
+  matchThreshold   Int     @default(60)
+  enabledSources   String  @default("[\"remotive\",\"arbeitnow\"]") // JSON string[]
+  smtpFromName     String  @default("")
+
+  updatedAt        DateTime @updatedAt
+}
