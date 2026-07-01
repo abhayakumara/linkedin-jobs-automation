@@ -1,6 +1,6 @@
 import { MatchAnalysis } from "../types";
 import type { ParsedProfile } from "../profile";
-import { aiEnabled, scoreMatch as aiScoreMatch } from "./anthropic";
+import { aiEnabled, scoreMatch as aiScoreMatch } from "./llm";
 import { heuristicScore } from "./heuristic";
 
 // Score a job for a profile using AI when available, otherwise the heuristic.

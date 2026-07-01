@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getActiveProfile } from "@/lib/profile";
-import { aiEnabled, tailorResume } from "@/lib/ai/anthropic";
+import { aiEnabled, tailorResume } from "@/lib/ai/llm";
 import { atsKeywordCheck } from "@/lib/ai/heuristic";
 import { renderResumePdf } from "@/lib/resume/pdf";
 
@@ -15,7 +15,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   }
   if (!aiEnabled()) {
     return NextResponse.json(
-      { error: "Resume tailoring needs an ANTHROPIC_API_KEY in .env." },
+      { error: "Resume tailoring needs an AI provider configured in .env (set LLM_PROVIDER + its key)." },
       { status: 400 }
     );
   }

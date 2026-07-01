@@ -47,7 +47,7 @@ export default function JobDetail({
   job: JobFull;
   analysis: MatchAnalysis;
   ats: AtsKeywords;
-  caps: { ai: boolean; smtp: boolean; adzuna: boolean };
+  caps: { ai: boolean; smtp: boolean; adzuna: boolean; aiProvider?: string; aiEnvHint?: string };
   emailMode: "review" | "auto";
   automationEnabled: boolean;
 }) {
@@ -191,7 +191,7 @@ export default function JobDetail({
 
         {/* Action toolbar */}
         <div className="mt-4 flex flex-wrap gap-2">
-          <button onClick={tailor} disabled={!!loading} className="btn-primary" title={caps.ai ? "" : "Needs ANTHROPIC_API_KEY"}>
+          <button onClick={tailor} disabled={!!loading} className="btn-primary" title={caps.ai ? "" : `Needs an LLM provider (${caps.aiEnvHint || "LLM_PROVIDER"})`}>
             {loading === "resume" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
             Tailor resume
           </button>
@@ -213,7 +213,7 @@ export default function JobDetail({
         {!caps.ai && (
           <p className="mt-3 text-xs text-amber-300">
             <AlertTriangle className="mr-1 inline h-3.5 w-3.5" />
-            AI features need an ANTHROPIC_API_KEY in .env (match scoring falls back to a heuristic).
+            AI features need an LLM provider configured in .env — set LLM_PROVIDER (claude / groq / gemini / custom) and its key (match scoring falls back to a heuristic).
           </p>
         )}
       </div>

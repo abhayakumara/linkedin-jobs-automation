@@ -38,7 +38,7 @@ export default function Sidebar({
   caps,
 }: {
   profiles: ProfileLite[];
-  caps: { ai: boolean; adzuna: boolean; smtp: boolean };
+  caps: { ai: boolean; adzuna: boolean; smtp: boolean; aiProvider?: string; aiEnvHint?: string };
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -128,7 +128,7 @@ export default function Sidebar({
 
       {/* Capability badges */}
       <div className="mt-4 space-y-1 border-t border-white/10 pt-4 text-[11px]">
-        <CapRow label="AI (Claude)" ok={caps.ai} hint="ANTHROPIC_API_KEY" />
+        <CapRow label={`AI · ${caps.aiProvider || "LLM"}`} ok={caps.ai} hint={caps.aiEnvHint || "LLM_PROVIDER"} />
         <CapRow label="Adzuna jobs" ok={caps.adzuna} hint="ADZUNA_APP_ID" />
         <CapRow label="Email (SMTP)" ok={caps.smtp} hint="SMTP_USER" />
       </div>

@@ -52,7 +52,7 @@ export function heuristicScore(
     analysis: {
       rationale:
         "Heuristic score from keyword overlap between your resume and the job description. " +
-        "Add an ANTHROPIC_API_KEY for an AI-quality fit analysis.",
+        "Configure an AI provider (LLM_PROVIDER) for an AI-quality fit analysis.",
       strengths: present.slice(0, 8),
       gaps: missing.slice(0, 8),
       missingKeywords: missing.slice(0, 12),

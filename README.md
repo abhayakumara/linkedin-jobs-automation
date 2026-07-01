@@ -43,7 +43,34 @@ on interviews, not copy-pasting.
 ## 🛠 Tech stack
 
 Next.js 14 (App Router) · TypeScript · Tailwind CSS · Prisma + SQLite ·
-Anthropic Claude (`claude-opus-4-8`) · Playwright (PDF + LinkedIn) · Nodemailer · Recharts.
+Pluggable LLM provider (Claude · Groq · Gemini · self-hosted) · Playwright (PDF + LinkedIn) ·
+Nodemailer · Recharts.
+
+---
+
+## 🤖 Choose your AI provider (free options included)
+
+The AI features are **provider-agnostic** — pick whichever you like in `.env` via
+`LLM_PROVIDER`. Start free with Groq or Gemini, and upgrade to Claude later by
+just adding a key (no code changes).
+
+| `LLM_PROVIDER` | Provider | Cost | Env vars |
+|----------------|----------|------|----------|
+| `groq`   | Groq (Llama etc.) | **Free** | `GROQ_API_KEY`, `GROQ_MODEL` |
+| `gemini` | Google Gemini | **Free tier** | `GEMINI_API_KEY`, `GEMINI_MODEL` |
+| `claude` | Anthropic Claude | Paid | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` |
+| `custom` | Your own / self-hosted LLM, or any OpenAI-compatible API (Ollama, LM Studio, vLLM, LocalAI, OpenAI) | Free (self-host) | `CUSTOM_LLM_BASE_URL`, `CUSTOM_LLM_API_KEY`, `CUSTOM_LLM_MODEL` |
+
+- Leave `LLM_PROVIDER` **blank** to auto-pick the first provider you've configured
+  (order: claude → groq → gemini → custom).
+- Run a **local model with zero cost/keys**: install [Ollama](https://ollama.com/),
+  `ollama pull llama3.1`, then set `LLM_PROVIDER=custom` and
+  `CUSTOM_LLM_BASE_URL=http://localhost:11434/v1`, `CUSTOM_LLM_MODEL=llama3.1`
+  (leave `CUSTOM_LLM_API_KEY` blank).
+- **Upgrading to Claude** later: add `ANTHROPIC_API_KEY` and set
+  `LLM_PROVIDER=claude`. That's it — every feature switches over.
+- No provider configured? The app still runs and falls back to a keyword
+  heuristic for match scoring (AI text generation is disabled until you add one).
 
 ---
 
@@ -58,7 +85,9 @@ npx playwright install chromium
 
 # 3. Configure environment (copy and fill in what you have)
 cp .env.example .env
-#    → add ANTHROPIC_API_KEY to unlock AI features (optional but recommended)
+#    → pick an AI provider (LLM_PROVIDER) + its key to unlock AI features.
+#      Free options: LLM_PROVIDER=groq + GROQ_API_KEY, or gemini + GEMINI_API_KEY.
+#      See "Choose your AI provider" above.
 
 # 4. Set up the local database (creates dev.db + a starter profile)
 npm run setup        # = prisma db push && seed
@@ -72,7 +101,7 @@ draft/track applications. Adding keys progressively unlocks more:
 
 | Capability        | Env var(s)                          | Without it |
 |-------------------|-------------------------------------|------------|
-| AI tailoring, cover letters, smart scoring, email drafts | `ANTHROPIC_API_KEY` | Keyword heuristic; AI generation disabled |
+| AI tailoring, cover letters, smart scoring, email drafts | `LLM_PROVIDER` + provider key (`GROQ_API_KEY` / `GEMINI_API_KEY` / `ANTHROPIC_API_KEY` / `CUSTOM_LLM_BASE_URL`) | Keyword heuristic; AI generation disabled |
 | Richer/global job feed | `ADZUNA_APP_ID`, `ADZUNA_APP_KEY` ([free](https://developer.adzuna.com/)) | Remotive + Arbeitnow still work with no key |
 | Sending recruiter emails | `SMTP_USER`, `SMTP_PASSWORD` ([Gmail app password](https://myaccount.google.com/apppasswords)) | Draft & edit only |
 
@@ -133,7 +162,7 @@ app/                Next.js pages + API routes
   api/              REST handlers (jobs, profiles, outreach, settings, storage)
 components/         UI (Sidebar, JobsBoard, JobDetail, Kanban, Profiles, Settings…)
 lib/
-  ai/               anthropic.ts (Claude), heuristic.ts (fallback), match.ts
+  ai/               provider.ts (Claude/Groq/Gemini/custom switch), llm.ts (AI tasks), heuristic.ts (fallback), match.ts
   jobSources/       remotive, arbeitnow, adzuna, manual + aggregator/dedupe
   resume/           markdown→HTML + Playwright PDF
   email/            nodemailer

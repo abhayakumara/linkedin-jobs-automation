@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getActiveProfile } from "@/lib/profile";
 import { getSettings } from "@/lib/settings";
-import { aiEnabled, draftRecruiterEmail } from "@/lib/ai/anthropic";
+import { aiEnabled, draftRecruiterEmail } from "@/lib/ai/llm";
 import { sendEmail } from "@/lib/email/mailer";
 
 export const maxDuration = 120;

@@ -1,40 +1,11 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { MatchAnalysis } from "../types";
 import type { ParsedProfile } from "../profile";
+import { complete, aiEnabled } from "./provider";
 
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-4-8";
-
-export function aiEnabled(): boolean {
-  return Boolean(process.env.ANTHROPIC_API_KEY);
-}
-
-let client: Anthropic | null = null;
-function getClient(): Anthropic {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    throw new Error("ANTHROPIC_API_KEY is not set. Add it to .env to enable AI features.");
-  }
-  if (!client) client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  return client;
-}
-
-// Low-level helper: send a prompt, return text. Optionally ask for JSON.
-async function complete(opts: {
-  system: string;
-  user: string;
-  maxTokens?: number;
-}): Promise<string> {
-  const msg = await getClient().messages.create({
-    model: MODEL,
-    max_tokens: opts.maxTokens ?? 2048,
-    system: opts.system,
-    messages: [{ role: "user", content: opts.user }],
-  });
-  return msg.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("\n")
-    .trim();
-}
+// Higher-level AI tasks (match scoring, resume tailoring, cover letters, outreach,
+// interview prep). Provider selection and the low-level `complete()` call live in
+// ./provider — swap Claude / Groq / Gemini / a self-hosted LLM via LLM_PROVIDER.
+export { aiEnabled };
 
 // Extract the first JSON object/array from a model response (handles code fences).
 function extractJson<T>(text: string, fallback: T): T {

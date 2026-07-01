@@ -1,4 +1,5 @@
 import { prisma, parseJson } from "./db";
+import { aiEnabled, providerInfo } from "./ai/provider";
 
 export interface AppSettings {
   emailMode: "review" | "auto";
@@ -42,8 +43,12 @@ export async function updateSettings(patch: Partial<AppSettings>): Promise<AppSe
 
 // Runtime capability checks (used to show status badges in the UI).
 export function capabilities() {
+  const provider = providerInfo();
   return {
-    ai: Boolean(process.env.ANTHROPIC_API_KEY),
+    ai: aiEnabled(),
+    aiProvider: provider.label,
+    aiModel: provider.model,
+    aiEnvHint: provider.envHint,
     adzuna: Boolean(process.env.ADZUNA_APP_ID && process.env.ADZUNA_APP_KEY),
     smtp: Boolean(process.env.SMTP_USER && process.env.SMTP_PASSWORD),
   };

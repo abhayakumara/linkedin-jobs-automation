@@ -12,7 +12,7 @@ export default function SettingsManager({
   initial, caps, sources, linkedinSession,
 }: {
   initial: AppSettings;
-  caps: { ai: boolean; adzuna: boolean; smtp: boolean };
+  caps: { ai: boolean; adzuna: boolean; smtp: boolean; aiProvider?: string; aiModel?: string; aiEnvHint?: string };
   sources: SourceLite[];
   linkedinSession: boolean;
 }) {
@@ -57,7 +57,11 @@ export default function SettingsManager({
       <div className="card p-5">
         <h2 className="mb-3 text-sm font-semibold">Integrations (.env)</h2>
         <div className="grid gap-2 sm:grid-cols-3">
-          <CapCard label="AI — Claude" ok={caps.ai} hint="ANTHROPIC_API_KEY" />
+          <CapCard
+            label={`AI — ${caps.aiProvider || "LLM"}`}
+            ok={caps.ai}
+            hint={caps.ai ? caps.aiModel || "" : `${caps.aiEnvHint || "LLM_PROVIDER"} · set LLM_PROVIDER`}
+          />
           <CapCard label="Adzuna jobs" ok={caps.adzuna} hint="ADZUNA_APP_ID / KEY" />
           <CapCard label="Email — SMTP" ok={caps.smtp} hint="SMTP_USER / PASSWORD" />
         </div>

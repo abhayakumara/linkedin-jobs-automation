@@ -62,9 +62,14 @@ export default async function DashboardPage() {
       {!caps.ai && (
         <div className="card border-amber-500/30 bg-amber-500/[0.06] px-4 py-3 text-sm text-amber-200">
           <Sparkles className="mr-2 inline h-4 w-4" />
-          Add an <code className="rounded bg-black/30 px-1">ANTHROPIC_API_KEY</code> to your{" "}
-          <code className="rounded bg-black/30 px-1">.env</code> to unlock AI resume tailoring, cover
-          letters, and high-quality match scoring. (A keyword heuristic is used meanwhile.)
+          Configure an AI provider in your <code className="rounded bg-black/30 px-1">.env</code> to
+          unlock AI resume tailoring, cover letters, and high-quality match scoring. Set{" "}
+          <code className="rounded bg-black/30 px-1">LLM_PROVIDER</code> to{" "}
+          <code className="rounded bg-black/30 px-1">groq</code> (free),{" "}
+          <code className="rounded bg-black/30 px-1">gemini</code>,{" "}
+          <code className="rounded bg-black/30 px-1">claude</code>, or{" "}
+          <code className="rounded bg-black/30 px-1">custom</code>, plus its key. (A keyword heuristic
+          is used meanwhile.)
         </div>
       )}
 
