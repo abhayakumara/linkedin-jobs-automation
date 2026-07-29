@@ -10,6 +10,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (body.targetRoles !== undefined) data.targetRoles = JSON.stringify(body.targetRoles);
   if (body.targetCompanies !== undefined) data.targetCompanies = JSON.stringify(body.targetCompanies);
   if (body.preferences !== undefined) data.preferences = JSON.stringify(body.preferences);
+  if (body.autofill !== undefined) data.autofill = JSON.stringify(body.autofill);
 
   const profile = await prisma.profile.update({ where: { id: params.id }, data });
   return NextResponse.json(profile);

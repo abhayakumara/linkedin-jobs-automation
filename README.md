@@ -19,6 +19,20 @@ on interviews, not copy-pasting.
   one at a time.
 - **Automatic job discovery** — pulls real jobs from public job APIs and de-dupes
   them. Paste any job (incl. LinkedIn) manually too.
+- **⚡ Smart Apply (unified page)** — one place to search every source for roles
+  that fit your skills, then **apply in one click** on each job without leaving the
+  page. Each job expands an apply drawer with **Quick Apply** (tailors your resume
+  to the JD, renders a PDF, drafts a cover letter, and builds an autofill kit — all
+  in one click) plus the autofill kit itself.
+- **Base resume _or_ a job-specific resume** — use your profile's base resume by
+  default, or paste/upload a **specific resume for a particular job**; JobPilot then
+  tailors from whichever you chose (truthfully — it never fabricates).
+- **Autofill kit** — parses your resume into structured fields (name, email, phone,
+  links, current title, years, skills, summary) and combines them with your
+  screening answers (work authorization, notice period, expected salary, relocation)
+  so you can fill any external application form with **one-click copy** per field, or
+  "Copy all". Feeds the opt-in LinkedIn automation too. Auto-extract runs on the
+  Profiles page (AI when configured, a regex heuristic otherwise).
 - **🇮🇳 Remote (India) section** — a dedicated view that discovers remote roles
   realistically open to India-based candidates (Worldwide / Asia / India /
   unrestricted listings, plus Adzuna searched against India). It carries the
@@ -112,13 +126,17 @@ The sidebar shows live **on/off** badges for each integration.
 ## 🧭 How to use it
 
 1. **Profiles** → fill in your details, target roles, preferences, and paste your
-   base resume (Markdown). Set it active.
-2. **Jobs** → pick sources and hit **Discover jobs**, or **Add manually** to paste
-   a job you found anywhere. Each job is scored against your profile.
-3. **Open a job** → **Tailor resume** (generates tailored Markdown + PDF + ATS
-   check), generate a **Cover letter** and **Interview prep**, then **Apply on
-   site** / **Mark as applied**.
-4. **Outreach tab** → draft a recruiter email, review it, and **Send**.
+   base resume (Markdown). Click **Auto-extract details from resume** to populate
+   the autofill kit, and set your screening answers (work auth, notice, salary,
+   relocation). Set the profile active.
+2. **Smart Apply** (the fastest path) → **Search all jobs**, then on any job click
+   **Apply** → **Quick Apply**. Optionally switch to a **specific resume for this
+   job** first. Copy autofill fields into the employer's form, download the tailored
+   PDF, and **Mark as applied**.
+3. **Jobs** → the classic list: pick sources and **Discover jobs**, or **Add
+   manually**. Open a job for the full toolkit (tailor, cover letter, interview
+   prep, outreach) — the same Quick-Apply + autofill kit lives in its Apply rail.
+4. **Outreach** → draft a recruiter email, review it, and **Send**.
 5. **Pipeline** → drag cards to track status. **Dashboard** shows your funnel.
 
 ---

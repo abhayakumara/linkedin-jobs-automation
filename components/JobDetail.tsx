@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { markdownToHtml } from "@/lib/resume/markdown";
-import { MatchAnalysis, AtsKeywords, JOB_STATUSES } from "@/lib/types";
+import { MatchAnalysis, AtsKeywords, AutofillData, JOB_STATUSES } from "@/lib/types";
 import { MatchBadge } from "./ui";
+import ApplyKit from "./ApplyKit";
 import {
   ArrowLeft, FileText, Mail, Sparkles, MessagesSquare, Send, ExternalLink, Loader2,
   Download, CheckCircle2, AlertTriangle, Building2, MapPin,
@@ -27,6 +28,7 @@ interface JobFull {
     tailoredResumeMd: string;
     resumePdfPath: string;
     coverLetter: string;
+    sourceResumeMd: string;
     status: string;
     method: string;
     notes: string;
@@ -43,6 +45,8 @@ export default function JobDetail({
   caps,
   emailMode,
   automationEnabled,
+  autofill,
+  hasBaseResume,
 }: {
   job: JobFull;
   analysis: MatchAnalysis;
@@ -50,6 +54,8 @@ export default function JobDetail({
   caps: { ai: boolean; smtp: boolean; adzuna: boolean; aiProvider?: string; aiEnvHint?: string };
   emailMode: "review" | "auto";
   automationEnabled: boolean;
+  autofill: AutofillData;
+  hasBaseResume: boolean;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("description");
@@ -272,38 +278,27 @@ export default function JobDetail({
         <div className="space-y-4">
           <div className="card p-5">
             <h3 className="mb-3 text-sm font-semibold">Apply</h3>
-            <div className="space-y-2">
-              {pdfPath && (
-                <a href={`/api/storage${pdfPath.replace("/storage", "")}`} target="_blank" rel="noreferrer" className="btn-ghost w-full">
-                  <Download className="h-4 w-4" /> Tailored resume PDF
-                </a>
-              )}
-              {job.url && (
-                <a href={job.url} target="_blank" rel="noreferrer" className="btn-primary w-full">
-                  <ExternalLink className="h-4 w-4" /> Apply on site
-                </a>
-              )}
-              <button onClick={() => apply("assisted")} disabled={!!loading} className="btn-ghost w-full">
-                {loading === "apply-assisted" ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                Mark as applied
+            <ApplyKit
+              job={{ id: job.id, title: job.title, company: job.company, url: job.url, source: job.source }}
+              initialAutofill={autofill}
+              initialSourceResumeMd={job.application?.sourceResumeMd || ""}
+              hasBaseResume={hasBaseResume}
+              aiEnabled={caps.ai}
+              automationEnabled={automationEnabled}
+              applicationStatus={job.status}
+              onApplied={() => router.refresh()}
+              compact
+            />
+            {job.url.includes("linkedin.com") && (
+              <button
+                onClick={() => apply("linkedin")}
+                disabled={!!loading || !automationEnabled}
+                className="btn-ghost mt-3 w-full"
+                title={automationEnabled ? "Attempt LinkedIn Easy Apply" : "Enable automation in Settings (at your own risk)"}
+              >
+                {loading === "apply-linkedin" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                LinkedIn auto-apply
               </button>
-
-              {job.url.includes("linkedin.com") && (
-                <button
-                  onClick={() => apply("linkedin")}
-                  disabled={!!loading || !automationEnabled}
-                  className="btn-ghost w-full"
-                  title={automationEnabled ? "Attempt LinkedIn Easy Apply" : "Enable automation in Settings (at your own risk)"}
-                >
-                  {loading === "apply-linkedin" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  LinkedIn auto-apply
-                </button>
-              )}
-            </div>
-            {job.url.includes("linkedin.com") && !automationEnabled && (
-              <p className="mt-2 text-[11px] text-amber-300">
-                LinkedIn automation is off. Enabling it may violate LinkedIn's ToS.
-              </p>
             )}
             {job.application?.notes && (
               <p className="mt-3 text-xs text-slate-400">Note: {job.application.notes}</p>

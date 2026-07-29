@@ -1,5 +1,5 @@
 import { prisma, parseJson } from "./db";
-import { DEFAULT_PREFERENCES, ProfilePreferences } from "./types";
+import { DEFAULT_PREFERENCES, ProfilePreferences, AutofillData, EMPTY_AUTOFILL } from "./types";
 import type { Profile } from "@prisma/client";
 
 export interface ParsedProfile {
@@ -7,6 +7,7 @@ export interface ParsedProfile {
   targetRoles: string[];
   targetCompanies: string[];
   preferences: ProfilePreferences;
+  autofill: AutofillData;
 }
 
 export function parseProfile(p: Profile): ParsedProfile {
@@ -15,6 +16,7 @@ export function parseProfile(p: Profile): ParsedProfile {
     targetRoles: parseJson<string[]>(p.targetRoles, []),
     targetCompanies: parseJson<string[]>(p.targetCompanies, []),
     preferences: parseJson<ProfilePreferences>(p.preferences, DEFAULT_PREFERENCES),
+    autofill: { ...EMPTY_AUTOFILL, ...parseJson<Partial<AutofillData>>(p.autofill, {}) },
   };
 }
 

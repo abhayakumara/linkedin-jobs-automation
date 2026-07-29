@@ -30,6 +30,44 @@ export interface AtsKeywords {
   missing: string[];
 }
 
+// Structured data parsed from a resume, used to autofill application forms and
+// to feed the (opt-in) LinkedIn automation. Contact fields prefill the profile;
+// the screening-answer fields are user-editable defaults for common questions.
+export interface AutofillData {
+  fullName: string;
+  email: string;
+  phone: string;
+  location: string;
+  linkedinUrl: string;
+  portfolioUrl: string;
+  currentTitle: string;
+  yearsExperience: string; // free text, e.g. "6"
+  topSkills: string[];
+  summary: string; // 1-2 sentence professional summary
+  // Common screening answers (defaults the user can edit once, reused everywhere).
+  workAuthorization: string; // e.g. "Authorized to work in India"
+  noticePeriod: string; // e.g. "30 days"
+  expectedSalary: string;
+  willingToRelocate: string; // "Yes" | "No" | ""
+}
+
+export const EMPTY_AUTOFILL: AutofillData = {
+  fullName: "",
+  email: "",
+  phone: "",
+  location: "",
+  linkedinUrl: "",
+  portfolioUrl: "",
+  currentTitle: "",
+  yearsExperience: "",
+  topSkills: [],
+  summary: "",
+  workAuthorization: "",
+  noticePeriod: "",
+  expectedSalary: "",
+  willingToRelocate: "",
+};
+
 // A job in the shape returned by any JobSource before it is persisted.
 export interface NormalizedJob {
   source: string;

@@ -1,4 +1,4 @@
-import { MatchAnalysis } from "../types";
+import { MatchAnalysis, AutofillData, EMPTY_AUTOFILL } from "../types";
 import type { ParsedProfile } from "../profile";
 import { complete, aiEnabled } from "./provider";
 
@@ -80,20 +80,41 @@ export async function scoreMatch(
 }
 
 // ── Resume tailoring ──
+// `sourceResume` overrides the profile's base resume when the user picked a
+// job-specific resume for this role; otherwise the profile base resume is used.
 export async function tailorResume(
   profile: ParsedProfile,
-  job: { title: string; company: string; descriptionText: string }
+  job: { title: string; company: string; descriptionText: string },
+  sourceResume?: string
 ): Promise<string> {
+  const base = (sourceResume && sourceResume.trim()) || profile.raw.baseResume;
   const system =
     "You are an expert resume writer specializing in ATS optimization. You tailor a candidate's " +
     "EXISTING resume to a specific job. CRITICAL RULES: never invent experience, employers, dates, " +
     "degrees, or metrics that are not in the base resume. You may reorder, reword, re-emphasize, and " +
     "surface relevant keywords that truthfully apply. Output clean Markdown only — no commentary.";
-  const user = `BASE RESUME (source of truth — do not fabricate beyond this):\n${profile.raw.baseResume}\n\nTARGET JOB: ${job.title} at ${job.company}\nJOB DESCRIPTION:\n${job.descriptionText.slice(
+  const user = `BASE RESUME (source of truth — do not fabricate beyond this):\n${base}\n\nTARGET JOB: ${job.title} at ${job.company}\nJOB DESCRIPTION:\n${job.descriptionText.slice(
     0,
     6000
   )}\n\nRewrite the resume in Markdown, tailored to this job: lead with the most relevant experience and skills, mirror the JD's terminology where truthful, and keep it concise (one page where possible). Output ONLY the Markdown resume.`;
   return complete({ system, user, maxTokens: 3000 });
+}
+
+// ── Parse a resume into structured autofill data (for application forms) ──
+export async function parseResumeAutofill(resumeText: string): Promise<AutofillData> {
+  const system =
+    "You extract structured data from a resume for autofilling job application forms. " +
+    "Only use information present in the resume — never invent contact details, titles, or numbers. " +
+    "If a field is not present, return an empty string (or empty array for skills). " +
+    "Respond with ONLY a JSON object, no prose.";
+  const user = `RESUME:\n${resumeText.slice(0, 8000)}\n\nReturn JSON with this exact shape:\n{\n  "fullName": "",\n  "email": "",\n  "phone": "",\n  "location": "",\n  "linkedinUrl": "",\n  "portfolioUrl": "",\n  "currentTitle": "<most recent job title>",\n  "yearsExperience": "<total years of professional experience as a number, best estimate from dates>",\n  "topSkills": ["<up to 12 key skills>"],\n  "summary": "<a truthful 1-2 sentence professional summary>"\n}`;
+  const text = await complete({ system, user, maxTokens: 1000 });
+  const parsed = extractJson<Partial<AutofillData>>(text, {});
+  return {
+    ...EMPTY_AUTOFILL,
+    ...parsed,
+    topSkills: Array.isArray(parsed.topSkills) ? parsed.topSkills.slice(0, 12) : [],
+  };
 }
 
 // ── Cover letter ──

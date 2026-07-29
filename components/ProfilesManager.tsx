@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ProfilePreferences } from "@/lib/types";
-import { UserRound, Plus, Trash2, Check, Save, Loader2, Upload } from "lucide-react";
+import { ProfilePreferences, AutofillData, EMPTY_AUTOFILL } from "@/lib/types";
+import { UserRound, Plus, Trash2, Check, Save, Loader2, Upload, Sparkles, Wand2 } from "lucide-react";
 
 interface ProfileForm {
   id: string;
@@ -19,6 +19,7 @@ interface ProfileForm {
   targetRoles: string[];
   targetCompanies: string[];
   preferences: ProfilePreferences;
+  autofill: AutofillData;
 }
 
 export default function ProfilesManager({ initialProfiles }: { initialProfiles: ProfileForm[] }) {
@@ -36,6 +37,42 @@ export default function ProfilesManager({ initialProfiles }: { initialProfiles: 
     if (!selected) return;
     patchSelected({ preferences: { ...selected.preferences, ...patch } });
   }
+  function patchAutofill(patch: Partial<AutofillData>) {
+    if (!selected) return;
+    patchSelected({ autofill: { ...selected.autofill, ...patch } });
+  }
+
+  const [extracting, setExtracting] = useState(false);
+  async function extractFromResume() {
+    if (!selected) return;
+    if (!selected.baseResume.trim()) { setMsg("Add a base resume first."); return; }
+    setExtracting(true);
+    setMsg("");
+    // Persist the current resume so the server parses the latest text.
+    await fetch(`/api/profiles/${selected.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ baseResume: selected.baseResume }),
+    });
+    const res = await fetch(`/api/profiles/${selected.id}/autofill`, { method: "POST" });
+    const d = await res.json();
+    setExtracting(false);
+    if (!res.ok) { setMsg(d.error || "Extraction failed."); return; }
+    // Merge extracted data + any backfilled contact fields into the form.
+    patchSelected({
+      autofill: { ...selected.autofill, ...d.autofill },
+      ...(d.profile?.name ? { name: d.profile.name } : {}),
+      ...(d.profile?.email ? { email: d.profile.email } : {}),
+      ...(d.profile?.phone ? { phone: d.profile.phone } : {}),
+      ...(d.profile?.location ? { location: d.profile.location } : {}),
+      ...(d.profile?.linkedinUrl ? { linkedinUrl: d.profile.linkedinUrl } : {}),
+      ...(d.profile?.portfolioUrl ? { portfolioUrl: d.profile.portfolioUrl } : {}),
+      ...(d.profile?.headline ? { headline: d.profile.headline } : {}),
+    });
+    setMsg("Details extracted from your resume ✓");
+    setTimeout(() => setMsg(""), 3000);
+    router.refresh();
+  }
 
   async function createProfile() {
     const res = await fetch("/api/profiles", {
@@ -49,6 +86,7 @@ export default function ProfilesManager({ initialProfiles }: { initialProfiles: 
       portfolioUrl: "", headline: "", baseResume: "", isActive: created.isActive,
       targetRoles: [], targetCompanies: [],
       preferences: { remote: true, locations: [], minSalary: 0, seniority: "mid", mustHave: [], avoid: [] },
+      autofill: { ...EMPTY_AUTOFILL },
     };
     setProfiles((ps) => [form, ...ps]);
     setSelectedId(created.id);
@@ -182,14 +220,47 @@ export default function ProfilesManager({ initialProfiles }: { initialProfiles: 
             </div>
 
             <Field label="Base resume (Markdown)">
-              <div className="mb-2">
+              <div className="mb-2 flex flex-wrap items-center gap-2">
                 <label className="btn-ghost cursor-pointer text-xs">
                   <Upload className="h-3.5 w-3.5" /> Upload .txt/.md
                   <input type="file" accept=".txt,.md,text/plain,text/markdown" className="hidden" onChange={onUpload} />
                 </label>
+                <button onClick={extractFromResume} disabled={extracting} className="btn-ghost text-xs">
+                  {extracting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+                  Auto-extract details from resume
+                </button>
               </div>
               <textarea className="input h-72 resize-none font-mono text-xs" value={selected.baseResume} onChange={(e) => patchSelected({ baseResume: e.target.value })} placeholder="# Your Name&#10;Use Markdown. This is the source of truth JobPilot tailors per job." />
             </Field>
+
+            {/* Autofill / application answers */}
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+              <div className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <Sparkles className="h-3.5 w-3.5 text-brand-400" /> Application autofill
+              </div>
+              <p className="mb-3 text-xs text-slate-500">
+                These prefill job application forms (via the Smart Apply autofill kit). Auto-extract from your resume,
+                then set the screening answers once and reuse them everywhere.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Current title"><input className="input" value={selected.autofill.currentTitle} onChange={(e) => patchAutofill({ currentTitle: e.target.value })} /></Field>
+                <Field label="Years of experience"><input className="input" value={selected.autofill.yearsExperience} onChange={(e) => patchAutofill({ yearsExperience: e.target.value })} placeholder="e.g. 6" /></Field>
+                <Field label="Work authorization"><input className="input" value={selected.autofill.workAuthorization} onChange={(e) => patchAutofill({ workAuthorization: e.target.value })} placeholder="e.g. Authorized to work in India" /></Field>
+                <Field label="Notice period"><input className="input" value={selected.autofill.noticePeriod} onChange={(e) => patchAutofill({ noticePeriod: e.target.value })} placeholder="e.g. 30 days" /></Field>
+                <Field label="Expected salary"><input className="input" value={selected.autofill.expectedSalary} onChange={(e) => patchAutofill({ expectedSalary: e.target.value })} placeholder="e.g. ₹25 LPA" /></Field>
+                <Field label="Willing to relocate">
+                  <select className="input" value={selected.autofill.willingToRelocate} onChange={(e) => patchAutofill({ willingToRelocate: e.target.value })}>
+                    <option value="">—</option><option value="Yes">Yes</option><option value="No">No</option>
+                  </select>
+                </Field>
+              </div>
+              <div className="mt-3">
+                <Field label="Top skills"><TagInput tags={selected.autofill.topSkills} onChange={(t) => patchAutofill({ topSkills: t })} placeholder="e.g. React" /></Field>
+              </div>
+              <div className="mt-3">
+                <Field label="Professional summary"><textarea className="input h-20 resize-none" value={selected.autofill.summary} onChange={(e) => patchAutofill({ summary: e.target.value })} placeholder="A short, truthful summary used in applications." /></Field>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="card grid place-items-center p-10 text-slate-400 lg:col-span-3">

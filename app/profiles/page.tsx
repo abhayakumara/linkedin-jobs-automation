@@ -22,6 +22,7 @@ export default async function ProfilesPage() {
       targetRoles: parsed.targetRoles,
       targetCompanies: parsed.targetCompanies,
       preferences: parsed.preferences,
+      autofill: parsed.autofill,
     };
   });
   return <ProfilesManager initialProfiles={profiles} />;

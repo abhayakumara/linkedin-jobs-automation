@@ -20,10 +20,11 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     );
   }
 
-  const job = await prisma.job.findUnique({ where: { id: params.id } });
+  const job = await prisma.job.findUnique({ where: { id: params.id }, include: { application: true } });
   if (!job) return NextResponse.json({ error: "Job not found" }, { status: 404 });
 
-  const tailoredResumeMd = await tailorResume(profile, job);
+  // Use a job-specific source resume when the user chose one, else the base resume.
+  const tailoredResumeMd = await tailorResume(profile, job, job.application?.sourceResumeMd || undefined);
   const ats = atsKeywordCheck(tailoredResumeMd, job.descriptionText);
 
   // Render a PDF (best-effort — if Chromium fails, keep the markdown).

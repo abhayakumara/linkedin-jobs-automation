@@ -28,6 +28,7 @@ model Profile {
   preferences     String @default("{}") // JSON: { remote, locations[], minSalary, seniority, mustHave[], avoid[] }
 
   baseResume    String   @default("") // markdown / plain text reference resume
+  autofill      String   @default("{}") // JSON AutofillData parsed from the resume (contact, skills, screening answers)
   isActive      Boolean  @default(false)
 
   createdAt     DateTime @default(now())
@@ -72,6 +73,9 @@ model Application {
   jobId           String   @unique
   job             Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
+  // The resume the user chose as the SOURCE for this job: empty = use the profile's
+  // base resume; otherwise a job-specific resume they pasted/uploaded for this role.
+  sourceResumeMd   String  @default("")
   tailoredResumeMd String  @default("")
   resumePdfPath    String  @default("")
   coverLetter      String  @default("")
