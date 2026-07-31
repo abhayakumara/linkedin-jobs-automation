@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AutofillData } from "@/lib/types";
-import { IndiaPortal } from "@/lib/jobSources/indiaPortals";
 import { MatchBadge, StatusBadge } from "./ui";
 import ApplyKit from "./ApplyKit";
 import {
@@ -32,11 +31,17 @@ interface ResumeTips {
   tips: string[];
 }
 
+interface PortalLink {
+  id: string;
+  name: string;
+  tagline: string;
+  url: string;
+}
+
 export default function IndiaJobs({
   initialJobs,
   portals,
   keywords,
-  profileLocation,
   autofill,
   hasBaseResume,
   caps,
@@ -44,9 +49,8 @@ export default function IndiaJobs({
   hasAdzuna,
 }: {
   initialJobs: JobRow[];
-  portals: IndiaPortal[];
+  portals: PortalLink[];
   keywords: string[];
-  profileLocation: string;
   autofill: AutofillData;
   hasBaseResume: boolean;
   caps: { ai: boolean; aiProvider?: string };
@@ -171,7 +175,7 @@ export default function IndiaJobs({
           {portals.map((p) => (
             <a
               key={p.id}
-              href={p.buildSearchUrl(keywords, profileLocation)}
+              href={p.url}
               target="_blank"
               rel="noreferrer"
               className="card card-hover flex items-center gap-3 px-3 py-2.5"

@@ -46,12 +46,20 @@ export default async function IndiaJobsPage() {
   const keywords = profile.targetRoles.length > 0 ? profile.targetRoles : [];
   const profileLocation = profile.preferences.locations[0] || "";
 
+  // Resolve portal search URLs on the server — functions can't cross the
+  // server→client boundary, so pass plain serializable link data instead.
+  const portalLinks = INDIA_PORTALS.map((p) => ({
+    id: p.id,
+    name: p.name,
+    tagline: p.tagline,
+    url: p.buildSearchUrl(keywords, profileLocation),
+  }));
+
   return (
     <IndiaJobs
       initialJobs={JSON.parse(JSON.stringify(jobs))}
-      portals={INDIA_PORTALS}
+      portals={portalLinks}
       keywords={keywords}
-      profileLocation={profileLocation}
       autofill={autofill}
       hasBaseResume={Boolean(profile.raw.baseResume.trim())}
       caps={{ ai: caps.ai, aiProvider: caps.aiProvider }}
