@@ -24,7 +24,7 @@ export default async function ApplyPage() {
   const [jobs, settings] = await Promise.all([
     prisma.job.findMany({
       where: { profileId: profile.raw.id },
-      include: { application: { select: { sourceResumeMd: true, status: true } } },
+      include: { application: { select: { sourceResumeMd: true, status: true, resumePdfPath: true } } },
       orderBy: [{ matchScore: "desc" }, { fetchedAt: "desc" }],
     }),
     getSettings(),

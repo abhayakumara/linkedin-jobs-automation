@@ -7,7 +7,7 @@ import { AutofillData } from "@/lib/types";
 import { MatchBadge, StatusBadge } from "./ui";
 import ApplyKit from "./ApplyKit";
 import {
-  Rocket, Search, Loader2, Building2, MapPin, ChevronDown, ChevronUp, Zap, ExternalLink, Layers,
+  Rocket, Search, Loader2, Building2, MapPin, ChevronDown, ChevronUp, Zap, ExternalLink, Layers, FileArchive,
 } from "lucide-react";
 
 interface JobRow {
@@ -21,7 +21,7 @@ interface JobRow {
   remote: boolean;
   status: string;
   matchScore: number | null;
-  application: { sourceResumeMd: string; status: string } | null;
+  application: { sourceResumeMd: string; status: string; resumePdfPath: string } | null;
 }
 
 interface SourceLite { id: string; label: string; requiresKey: boolean }
@@ -75,6 +75,40 @@ export default function SmartApply({
 
   // Jobs the batch will prepare: everything currently shown that isn't applied yet.
   const batchEligible = useMemo(() => filtered.filter((j) => j.status !== "applied"), [filtered]);
+  // Shown jobs that already have a tailored PDF (zip download candidates).
+  const withPdf = useMemo(() => filtered.filter((j) => j.application?.resumePdfPath), [filtered]);
+
+  const [zipping, setZipping] = useState(false);
+  async function downloadZip() {
+    if (withPdf.length === 0) return;
+    setZipping(true);
+    setBatchMsg("");
+    try {
+      const res = await fetch("/api/jobs/zip-resumes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobIds: withPdf.map((j) => j.id) }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setBatchMsg(d.error || "Could not build the zip.");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `JobPilot-resumes-${new Date().toISOString().slice(0, 10)}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setBatchMsg(e instanceof Error ? e.message : "Could not build the zip.");
+    } finally {
+      setZipping(false);
+    }
+  }
 
   async function batchApply() {
     if (batchEligible.length === 0) return;
@@ -206,11 +240,20 @@ export default function SmartApply({
           </p>
           {batchMsg && <p className="mt-1 text-xs text-slate-300">{batchMsg}</p>}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2 text-xs text-slate-400" title="Slower — one AI draft per job">
             <input type="checkbox" checked={includeCover} onChange={(e) => setIncludeCover(e.target.checked)} className="accent-brand-500" />
             Cover letters
           </label>
+          <button
+            onClick={downloadZip}
+            disabled={zipping || withPdf.length === 0}
+            className="btn-ghost"
+            title={withPdf.length ? "Download all tailored resume PDFs as a zip" : "No tailored PDFs yet — run Quick Apply first"}
+          >
+            {zipping ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileArchive className="h-4 w-4" />}
+            {zipping ? "Zipping…" : `Download PDFs (${withPdf.length})`}
+          </button>
           <button onClick={batchApply} disabled={batchRunning || batchEligible.length === 0} className="btn-primary">
             {batchRunning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
             {batchRunning ? "Preparing…" : `Quick Apply — ${batchEligible.length} ≥ ${minMatch}%`}

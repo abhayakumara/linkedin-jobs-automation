@@ -28,6 +28,8 @@ on interviews, not copy-pasting.
   Set the "Min match %" slider, then one click tailors the resume, renders a PDF,
   and builds the autofill kit for all shown, not-yet-applied jobs (cover letters
   optional; up to 25 per run) so a whole shortlist is application-ready in one go.
+  A **Download PDFs** button then bundles all tailored resume PDFs into a single
+  `.zip` (named `Company-Role.pdf` each) for easy attaching/backup.
 - **Base resume _or_ a job-specific resume** — use your profile's base resume by
   default, or paste/upload a **specific resume for a particular job**; JobPilot then
   tailors from whichever you chose (truthfully — it never fabricates).
