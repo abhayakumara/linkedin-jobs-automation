@@ -4,7 +4,7 @@ import { getActiveProfile } from "@/lib/profile";
 import { capabilities } from "@/lib/settings";
 import { PageHeader, EmptyState, StatusBadge } from "@/components/ui";
 import { PipelineChart } from "@/components/PipelineChart";
-import { Briefcase, Send, Mail, Sparkles, ArrowRight, Rocket, Globe } from "lucide-react";
+import { Briefcase, Send, Mail, Sparkles, ArrowRight, Rocket, Globe, MapPin } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -73,19 +73,34 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <Link
-        href="/remote-india"
-        className="card card-hover flex items-center justify-between px-4 py-3 text-sm"
-      >
-        <span className="flex items-center gap-2 text-slate-200">
-          <Globe className="h-4 w-4 text-brand-400" />
-          🇮🇳 Remote jobs workable from India
-        </span>
-        <span className="flex items-center gap-2 text-slate-400">
-          <span className="font-semibold text-brand-300">{indiaCount}</span> tracked
-          <ArrowRight className="h-4 w-4" />
-        </span>
-      </Link>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link
+          href="/remote-india"
+          className="card card-hover flex items-center justify-between px-4 py-3 text-sm"
+        >
+          <span className="flex items-center gap-2 text-slate-200">
+            <Globe className="h-4 w-4 text-brand-400" />
+            🇮🇳 Remote (India)
+          </span>
+          <span className="flex items-center gap-2 text-slate-400">
+            <span className="font-semibold text-brand-300">{indiaCount}</span> tracked
+            <ArrowRight className="h-4 w-4" />
+          </span>
+        </Link>
+        <Link
+          href="/jobs-india"
+          className="card card-hover flex items-center justify-between px-4 py-3 text-sm"
+        >
+          <span className="flex items-center gap-2 text-slate-200">
+            <MapPin className="h-4 w-4 text-brand-400" />
+            🇮🇳 Indian job portals
+          </span>
+          <span className="flex items-center gap-2 text-slate-400">
+            Search portals
+            <ArrowRight className="h-4 w-4" />
+          </span>
+        </Link>
+      </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Stat label="Jobs tracked" value={total} icon={Briefcase} href="/jobs" />

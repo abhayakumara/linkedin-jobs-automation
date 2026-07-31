@@ -15,6 +15,7 @@ import {
   Check,
   ChevronsUpDown,
   Zap,
+  MapPin,
 } from "lucide-react";
 
 interface ProfileLite {
@@ -29,6 +30,7 @@ const NAV = [
   { href: "/apply", label: "Smart Apply", icon: Zap },
   { href: "/jobs", label: "Jobs", icon: Briefcase },
   { href: "/remote-india", label: "Remote (India)", icon: Globe },
+  { href: "/jobs-india", label: "Jobs (India)", icon: MapPin },
   { href: "/applications", label: "Pipeline", icon: KanbanSquare },
   { href: "/outreach", label: "Outreach", icon: Mail },
   { href: "/profiles", label: "Profiles", icon: UserRound },

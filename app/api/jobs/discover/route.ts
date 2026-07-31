@@ -16,6 +16,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const settings = await getSettings();
   const indiaRemote: boolean = Boolean(body.indiaRemote);
+  const countryOverride: string | undefined = typeof body.country === "string" ? body.country : undefined;
   const sources: string[] = body.sources?.length ? body.sources : settings.enabledSources;
 
   const criteria: JobSearchCriteria = {
@@ -25,8 +26,10 @@ export async function POST(req: Request) {
     locations: profile.preferences.locations,
     remote: profile.preferences.remote,
     limitPerSource: body.limitPerSource ?? 15,
-    // Adzuna is country-scoped: search India listings when in India-remote mode.
+    // Adzuna is country-scoped: search India listings when in India-remote mode,
+    // or when a country is explicitly passed (e.g. from the India Jobs page).
     ...(indiaRemote ? { country: "in" } : {}),
+    ...(countryOverride ? { country: countryOverride } : {}),
   };
 
   const discovery = await discoverJobs(sources, criteria);
