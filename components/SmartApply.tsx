@@ -7,7 +7,7 @@ import { AutofillData } from "@/lib/types";
 import { MatchBadge, StatusBadge } from "./ui";
 import ApplyKit from "./ApplyKit";
 import {
-  Rocket, Search, Loader2, Building2, MapPin, ChevronDown, ChevronUp, Zap, ExternalLink,
+  Rocket, Search, Loader2, Building2, MapPin, ChevronDown, ChevronUp, Zap, ExternalLink, Layers,
 } from "lucide-react";
 
 interface JobRow {
@@ -55,6 +55,11 @@ export default function SmartApply({
   const [remoteOnly, setRemoteOnly] = useState(false);
   const [unappliedOnly, setUnappliedOnly] = useState(false);
 
+  // Batch "Quick Apply to all ≥ X%"
+  const [batchRunning, setBatchRunning] = useState(false);
+  const [batchMsg, setBatchMsg] = useState("");
+  const [includeCover, setIncludeCover] = useState(false);
+
   const filtered = useMemo(() => {
     return jobs.filter((j) => {
       if (remoteOnly && !j.remote) return false;
@@ -67,6 +72,38 @@ export default function SmartApply({
       return true;
     });
   }, [jobs, query, minMatch, remoteOnly, unappliedOnly]);
+
+  // Jobs the batch will prepare: everything currently shown that isn't applied yet.
+  const batchEligible = useMemo(() => filtered.filter((j) => j.status !== "applied"), [filtered]);
+
+  async function batchApply() {
+    if (batchEligible.length === 0) return;
+    setBatchRunning(true);
+    setBatchMsg("");
+    try {
+      const res = await fetch("/api/jobs/batch-quick-apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobIds: batchEligible.map((j) => j.id), coverLetter: includeCover }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setBatchMsg(d.error || "Batch failed.");
+      } else {
+        const failed = (d.results || []).filter((r: { ok: boolean }) => !r.ok).length;
+        const capNote = d.skipped > 0 ? ` — ${d.skipped} over the ${d.cap}/run cap, run again for the rest` : "";
+        setBatchMsg(
+          `Prepared ${d.prepared} of ${d.processed} job${d.processed === 1 ? "" : "s"}${capNote}.` +
+            (failed ? ` ${failed} failed.` : " Resumes tailored + autofill ready — open each to submit.")
+        );
+        router.refresh();
+      }
+    } catch (e) {
+      setBatchMsg(e instanceof Error ? e.message : "Batch failed.");
+    } finally {
+      setBatchRunning(false);
+    }
+  }
 
   async function discover() {
     setDiscovering(true);
@@ -154,6 +191,31 @@ export default function SmartApply({
           Min match {minMatch}%
           <input type="range" min={0} max={100} step={5} value={minMatch} onChange={(e) => setMinMatch(Number(e.target.value))} className="accent-brand-500" />
         </label>
+      </div>
+
+      {/* batch quick-apply */}
+      <div className="card flex flex-wrap items-center justify-between gap-3 border-brand-500/25 bg-brand-500/[0.05] p-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-sm font-semibold text-brand-100">
+            <Layers className="h-4 w-4" /> Batch Quick Apply
+          </div>
+          <p className="mt-0.5 text-xs text-slate-400">
+            Prepares (tailors resume + PDF + autofill) every shown job ≥ {minMatch}% that isn&apos;t applied yet —{" "}
+            <span className="font-medium text-brand-200">{batchEligible.length}</span> job{batchEligible.length === 1 ? "" : "s"}.
+            Adjust the “Min match” slider above to raise the bar. Up to 25 per run.
+          </p>
+          {batchMsg && <p className="mt-1 text-xs text-slate-300">{batchMsg}</p>}
+        </div>
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 text-xs text-slate-400" title="Slower — one AI draft per job">
+            <input type="checkbox" checked={includeCover} onChange={(e) => setIncludeCover(e.target.checked)} className="accent-brand-500" />
+            Cover letters
+          </label>
+          <button onClick={batchApply} disabled={batchRunning || batchEligible.length === 0} className="btn-primary">
+            {batchRunning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+            {batchRunning ? "Preparing…" : `Quick Apply — ${batchEligible.length} ≥ ${minMatch}%`}
+          </button>
+        </div>
       </div>
 
       {/* list */}

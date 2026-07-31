@@ -24,6 +24,10 @@ on interviews, not copy-pasting.
   page. Each job expands an apply drawer with **Quick Apply** (tailors your resume
   to the JD, renders a PDF, drafts a cover letter, and builds an autofill kit — all
   in one click) plus the autofill kit itself.
+- **Batch Quick Apply** — prepare **every job above a match threshold** at once.
+  Set the "Min match %" slider, then one click tailors the resume, renders a PDF,
+  and builds the autofill kit for all shown, not-yet-applied jobs (cover letters
+  optional; up to 25 per run) so a whole shortlist is application-ready in one go.
 - **Base resume _or_ a job-specific resume** — use your profile's base resume by
   default, or paste/upload a **specific resume for a particular job**; JobPilot then
   tailors from whichever you chose (truthfully — it never fabricates).
